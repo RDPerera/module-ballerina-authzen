@@ -51,6 +51,8 @@ ballerina {
     packageOrganization = packageOrg
     module = packageName
     langVersion = ballerinaLangVersion
+    // The package has no native code, so it builds a platform-independent bala.
+    platform = "any"
 }
 
 configurations {
