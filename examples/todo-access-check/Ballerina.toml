@@ -1,0 +1,14 @@
+[package]
+org = "ballerina"
+name = "todo_access_check"
+version = "0.1.0"
+distribution = "2201.12.0"
+
+[build-options]
+observabilityIncluded = true
+
+[[dependency]]
+org = "ballerina"
+name = "authzen"
+version = "1.0.0"
+repository = "local"
