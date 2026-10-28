@@ -59,4 +59,6 @@ isolated function testMetadataUrl() returns error? {
             "https://pdp.example.com:8443/.well-known/authzen-configuration/tenant1");
     test:assertEquals(check toMetadataUrl("http://localhost:9090/a/b"),
             "http://localhost:9090/.well-known/authzen-configuration/a/b");
+    test:assertEquals(check toMetadataUrl("https://[::1]:8443/t"),
+            "https://[::1]:8443/.well-known/authzen-configuration/t");
 }

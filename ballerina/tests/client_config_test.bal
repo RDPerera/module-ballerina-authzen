@@ -81,3 +81,10 @@ isolated function testGeneratedClient() returns error? {
     ActionSearchResponse actions = check generated->searchActions({subject: bob, 'resource: {'type: "document", id: "doc-1"}});
     test:assertEquals(actions.results, [canRead]);
 }
+
+@test:Config {}
+isolated function testPdpUrlNormalization() returns error? {
+    test:assertEquals(check toPolicyDecisionPoint(" HTTPS://pdp.example.com/tenant1/ "), "https://pdp.example.com/tenant1");
+    test:assertEquals(check toPolicyDecisionPoint("Http://localhost:9090"), "http://localhost:9090");
+    test:assertTrue(toPolicyDecisionPoint("ftp://pdp.example.com") is error);
+}

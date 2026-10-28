@@ -11,7 +11,10 @@ It covers:
 - PDP metadata at the well-known URL of a PDP at a bare host and of a PDP under a path (`/.well-known/authzen-configuration/tenant1`), and metadata that names another PDP, which is rejected.
 - Endpoint discovery: requests sent to the endpoints the PDP advertises, at the default paths and at custom URLs, operations whose endpoint the PDP doesn't advertise, and initialization that fails when the metadata is missing or names another PDP.
 - Authentication with a Bearer token (checked by a mock PDP that returns `401` without it), OAuth 2.0 client credentials (with a mock token endpoint), Basic auth, and an API key in the `Authorization` header or a custom header.
-- Rejected PDP URLs (no scheme, a query or a fragment), and the HTTP settings of the connection config.
+- A search `page` without `next_token`, as in the AuthZEN example response (Figure 19).
+- Credentials sent to a discovered custom endpoint, and advertised endpoints that are refused: a plain `http` endpoint of an `https` PDP, and a relative URL.
+- The exact JSON the client sends for every operation (checked by a mock PDP that returns the request body), Unicode identifiers, members the PDP returns that AuthZEN doesn't define, a batch of 500 entries, and 100 concurrent calls on one client.
+- PDP URL handling: rejected URLs (no scheme, another scheme, a query or a fragment), a trailing slash and an upper-case scheme, metadata URLs with ports, paths and IPv6 hosts, and the HTTP settings of the connection config.
 
 ## Running Tests
 

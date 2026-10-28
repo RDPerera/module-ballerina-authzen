@@ -47,7 +47,7 @@ public type ResourceSearchRequest record {
 public type ResourceSearchResponse record {
     # The matching resources
     Resource[] results;
-    # Paging information, present when the response doesn't hold the entire result set.
+    # Paging information, present when the response doesn't hold the entire result set. AuthZEN requires `next_token` in it, but some PDPs and the AuthZEN examples omit it, so an absent `next_token` means there are no more results.
     PageResponse page?;
     # Attributes of the environment of the request, for example the time or the location.
     Context context?;
@@ -89,7 +89,7 @@ public type Metadata record {
     string searchActionEndpoint?;
     # The registered capability URNs the PDP supports
     string[] capabilities?;
-    # A JWT, signed or MACed with JWS, that holds metadata values as claims. Its values take precedence over the plain values
+    # A JWT, signed or MACed with JWS, that holds metadata values as claims. Its values take precedence over the plain values once its signature is verified, which this client doesn't do
     @jsondata:Name {value: "signed_metadata"}
     string signedMetadata?;
 };
@@ -157,11 +157,11 @@ public type ResourceFilter record {
     Properties properties?;
 };
 
-# Paging information, present when the response doesn't hold the entire result set.
+# Paging information, present when the response doesn't hold the entire result set. AuthZEN requires `next_token` in it, but some PDPs and the AuthZEN examples omit it, so an absent `next_token` means there are no more results.
 public type PageResponse record {
-    # The token of the next page; an empty string when there are no more results
+    # The token of the next page; an empty string or absent when there are no more results
     @jsondata:Name {value: "next_token"}
-    string nextToken;
+    string nextToken?;
     # The number of results in this response
     @constraint:Int {minValue: 0}
     int count?;
@@ -246,19 +246,19 @@ public type Decision record {
 public type ActionSearchResponse record {
     # The matching actions
     Action[] results;
-    # Paging information, present when the response doesn't hold the entire result set.
+    # Paging information, present when the response doesn't hold the entire result set. AuthZEN requires `next_token` in it, but some PDPs and the AuthZEN examples omit it, so an absent `next_token` means there are no more results.
     PageResponse page?;
     # Attributes of the environment of the request, for example the time or the location.
     Context context?;
 };
 
-# The decisions of a batch. `evaluations` holds one decision per request entry, in request order. A request without an `evaluations` array is a single evaluation and is answered with a top-level `decision` instead.
+# The decisions of a batch. `evaluations` holds one decision per evaluated entry, in request order. With the `deny_on_first_deny` and `permit_on_first_permit` semantics, the PDP stops early and returns fewer decisions than entries. A request without an `evaluations` array is a single evaluation and is answered with a top-level `decision` instead.
 public type BatchEvaluationResponse record {
     # The decision of a request without an `evaluations` array
     boolean decision?;
     # Attributes of the environment of the request, for example the time or the location.
     Context context?;
-    # The decisions, in the order of the request entries
+    # The decisions, in the order of the request entries. Fewer than the entries when the PDP stops early
     Decision[] evaluations?;
 };
 
@@ -294,7 +294,7 @@ public type BatchEvaluationRequest record {
 public type SubjectSearchResponse record {
     # The matching subjects
     Subject[] results;
-    # Paging information, present when the response doesn't hold the entire result set.
+    # Paging information, present when the response doesn't hold the entire result set. AuthZEN requires `next_token` in it, but some PDPs and the AuthZEN examples omit it, so an absent `next_token` means there are no more results.
     PageResponse page?;
     # Attributes of the environment of the request, for example the time or the location.
     Context context?;

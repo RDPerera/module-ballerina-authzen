@@ -150,16 +150,16 @@ public isolated client class Client {
         }
 
         Metadata metadata = check fetchMetadata(self.metadataClient, policyDecisionPoint, apiKeyHeader);
-        self.evaluationClient = check toApiClient(metadata.accessEvaluationEndpoint, EVALUATION_PATH,
-                policyDecisionPoint, defaultClient, httpConfig);
-        self.evaluationsClient = check toOptionalApiClient(metadata.accessEvaluationsEndpoint, EVALUATIONS_PATH,
-                policyDecisionPoint, defaultClient, httpConfig);
-        self.searchSubjectClient = check toOptionalApiClient(metadata.searchSubjectEndpoint, SEARCH_SUBJECT_PATH,
-                policyDecisionPoint, defaultClient, httpConfig);
+        self.evaluationClient = check toApiClient(metadata.accessEvaluationEndpoint, "access_evaluation_endpoint",
+                EVALUATION_PATH, policyDecisionPoint, defaultClient, httpConfig);
+        self.evaluationsClient = check toOptionalApiClient(metadata.accessEvaluationsEndpoint,
+                "access_evaluations_endpoint", EVALUATIONS_PATH, policyDecisionPoint, defaultClient, httpConfig);
+        self.searchSubjectClient = check toOptionalApiClient(metadata.searchSubjectEndpoint, "search_subject_endpoint",
+                SEARCH_SUBJECT_PATH, policyDecisionPoint, defaultClient, httpConfig);
         self.searchResourceClient = check toOptionalApiClient(metadata.searchResourceEndpoint,
-                SEARCH_RESOURCE_PATH, policyDecisionPoint, defaultClient, httpConfig);
-        self.searchActionClient = check toOptionalApiClient(metadata.searchActionEndpoint, SEARCH_ACTION_PATH,
-                policyDecisionPoint, defaultClient, httpConfig);
+                "search_resource_endpoint", SEARCH_RESOURCE_PATH, policyDecisionPoint, defaultClient, httpConfig);
+        self.searchActionClient = check toOptionalApiClient(metadata.searchActionEndpoint, "search_action_endpoint",
+                SEARCH_ACTION_PATH, policyDecisionPoint, defaultClient, httpConfig);
     }
 
     # Get the PDP metadata: its identifier, the endpoints of the APIs it supports and its capabilities. An API
@@ -167,7 +167,8 @@ public isolated client class Client {
     #
     # The metadata is read from the well-known URL of the PDP, which inserts `/.well-known/authzen-configuration`
     # between the host and the path of the PDP URL. Fails when the `policy_decision_point` of the metadata isn't
-    # the PDP URL of the client, as AuthZEN requires.
+    # the PDP URL of the client, as AuthZEN requires. The request carries the configured credentials, as some PDPs
+    # protect their metadata.
     #
     # + return - The PDP metadata
     remote isolated function getMetadata() returns Metadata|error {
@@ -196,8 +197,9 @@ public isolated client class Client {
     #
     # + request - The access requests
     # + headers - Headers to be sent with the request
-    # + return - The access decisions, in the order of the request entries. A deny is a decision of `false`, not an
-    # error
+    # + return - The access decisions, in the order of the request entries. With the `deny_on_first_deny` and
+    # `permit_on_first_permit` semantics the PDP stops early and returns fewer decisions than entries. A deny is a
+    # decision of `false`, not an error
     remote isolated function evaluateBatch(BatchEvaluationRequest request, RequestHeaders headers = {})
             returns BatchEvaluationResponse|error {
         ApiClient apiClient = check supportedClient(self.evaluationsClient, "Access Evaluations",
@@ -276,9 +278,13 @@ isolated function toPolicyDecisionPoint(string serviceUrl) returns string|error 
     while url.endsWith("/") {
         url = url.substring(0, url.length() - 1);
     }
-    if !url.startsWith("https://") && !url.startsWith("http://") {
+    // URL schemes are case-insensitive; the lower-case form is kept so that identifiers compare equal.
+    int? schemeEnd = url.indexOf("://");
+    string scheme = schemeEnd is int ? url.substring(0, schemeEnd).toLowerAscii() : "";
+    if scheme != "https" && scheme != "http" {
         return error(string `The PDP URL must be an http or https URL: '${serviceUrl}'`);
     }
+    url = scheme + url.substring(scheme.length());
     if url.includes("?") || url.includes("#") {
         return error(string `The PDP URL must not have a query or a fragment: '${serviceUrl}'`);
     }
@@ -307,18 +313,29 @@ isolated function fetchMetadata(http:Client metadataClient, string policyDecisio
     return metadata;
 }
 
-isolated function toOptionalApiClient(string? endpoint, string defaultPath, string policyDecisionPoint,
-        GeneratedClient defaultClient, http:ClientConfiguration httpConfig) returns ApiClient?|error {
+isolated function toOptionalApiClient(string? endpoint, string metadataParameter, string defaultPath,
+        string policyDecisionPoint, GeneratedClient defaultClient, http:ClientConfiguration httpConfig)
+        returns ApiClient?|error {
     if endpoint is () {
         return ();
     }
-    return toApiClient(endpoint, defaultPath, policyDecisionPoint, defaultClient, httpConfig);
+    return toApiClient(endpoint, metadataParameter, defaultPath, policyDecisionPoint, defaultClient, httpConfig);
 }
 
-isolated function toApiClient(string endpoint, string defaultPath, string policyDecisionPoint,
-        GeneratedClient defaultClient, http:ClientConfiguration httpConfig) returns ApiClient|error {
+isolated function toApiClient(string endpoint, string metadataParameter, string defaultPath,
+        string policyDecisionPoint, GeneratedClient defaultClient, http:ClientConfiguration httpConfig)
+        returns ApiClient|error {
     if endpoint == policyDecisionPoint + defaultPath {
         return defaultClient;
+    }
+    string scheme = endpoint.toLowerAscii();
+    if !scheme.startsWith("https://") && !scheme.startsWith("http://") {
+        return error(string `The PDP metadata advertises an invalid '${metadataParameter}': '${endpoint}'`);
+    }
+    // The client sends its credentials to every endpoint, so an https PDP must not advertise a plain http one.
+    if policyDecisionPoint.startsWith("https://") && !scheme.startsWith("https://") {
+        return error(string `The PDP metadata advertises '${metadataParameter}' as '${endpoint}', which is not an `
+            + "https URL. The client doesn't send requests or credentials to it");
     }
     http:Client endpointClient = check new (endpoint, httpConfig);
     return endpointClient;

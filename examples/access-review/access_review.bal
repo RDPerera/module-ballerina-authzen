@@ -51,7 +51,8 @@ public function main() returns error? {
         });
         records.push(...resources.results.map(r => r.id));
         string nextCursor = resources.page?.nextToken ?: "";
-        if nextCursor == "" {
+        // Stop at the last page, and also if the PDP returns the same token again, which would never end.
+        if nextCursor == "" || nextCursor == cursor {
             break;
         }
         cursor = nextCursor;

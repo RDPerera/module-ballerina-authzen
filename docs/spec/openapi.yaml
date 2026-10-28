@@ -393,8 +393,10 @@ components:
           $ref: '#/components/schemas/BatchEvaluationOptions'
     BatchEvaluationResponse:
       description: >-
-        The decisions of a batch. `evaluations` holds one decision per request entry, in request order. A request
-        without an `evaluations` array is a single evaluation and is answered with a top-level `decision` instead.
+        The decisions of a batch. `evaluations` holds one decision per evaluated entry, in request order. With the
+        `deny_on_first_deny` and `permit_on_first_permit` semantics, the PDP stops early and returns fewer decisions
+        than entries. A request without an `evaluations` array is a single evaluation and is answered with a
+        top-level `decision` instead.
       type: object
       properties:
         decision:
@@ -403,7 +405,8 @@ components:
         context:
           $ref: '#/components/schemas/Context'
         evaluations:
-          description: The decisions, in the order of the request entries
+          description: >-
+            The decisions, in the order of the request entries. Fewer than the entries when the PDP stops early
           type: array
           items:
             $ref: '#/components/schemas/Decision'
@@ -449,13 +452,15 @@ components:
         properties:
           $ref: '#/components/schemas/Properties'
     PageResponse:
-      description: Paging information, present when the response doesn't hold the entire result set.
+      description: >-
+        Paging information, present when the response doesn't hold the entire result set. AuthZEN requires
+        `next_token` in it, but some PDPs and the AuthZEN examples omit it, so an absent `next_token` means there are
+        no more results.
       type: object
-      required: [next_token]
       properties:
         next_token:
           x-ballerina-name: nextToken
-          description: The token of the next page; an empty string when there are no more results
+          description: The token of the next page; an empty string or absent when there are no more results
           type: string
         count:
           description: The number of results in this response
@@ -591,5 +596,5 @@ components:
           x-ballerina-name: signedMetadata
           description: >-
             A JWT, signed or MACed with JWS, that holds metadata values as claims. Its values take precedence over
-            the plain values
+            the plain values once its signature is verified, which this client doesn't do
           type: string

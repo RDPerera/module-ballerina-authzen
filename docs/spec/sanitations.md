@@ -61,6 +61,13 @@ These changes are done in order to improve the overall usability, and as workaro
   and kept the `text/plain` error body that AuthZEN defines (section 10.1.2).
 - **Reason**: The descriptions become the doc comments of the generated types and functions.
 
+7. Accept a search page without `next_token`
+- **Original**: `PageResponse` required `next_token`.
+- **Updated**: `next_token` is optional, and an absent `next_token` means there are no more results.
+- **Reason**: AuthZEN section 8.2.2 requires `next_token` in a `page` object, but its own example search response
+  (Figure 19, section 8.3) has a `page` without it, and PDPs follow the example. With the member required, the
+  results of such a response are lost to a data binding error.
+
 ## OpenAPI cli command
 
 The following command generates the raw OpenAPI-derived client. The command should be executed from the repository root directory.
@@ -93,7 +100,7 @@ client.
 `ballerina/client.bal` is a hand-written wrapper around `GeneratedClient` (see step 7 below) and defines the public
 `Client`, `ConnectionConfig`, `ApiKeyConfig` and `RequestHeaders`. It is intentionally **not** regenerated.
 
-7. Follow AuthZEN discovery and authentication rules in a hand-written client
+8. Follow AuthZEN discovery and authentication rules in a hand-written client
 - **Change**: `ballerina/client.bal` is a hand-written wrapper (not generated) around the OpenAPI-generated
   `GeneratedClient`.
 - **Metadata URL**: AuthZEN publishes the metadata at a URL formed by inserting `/.well-known/authzen-configuration`
@@ -103,19 +110,24 @@ client.
   wrapper builds the URL as AuthZEN defines it.
 - **Metadata validation**: AuthZEN requires the PEP to discard metadata whose `policy_decision_point` is not the PDP
   identifier it was read from (section 9.2.3), which prevents PDP mix-up attacks. `getMetadata` returns an error in
-  that case. A trailing slash is ignored on both sides.
+  that case. A trailing slash is ignored on both sides. The metadata request carries the configured credentials, as
+  some PDPs protect their metadata, although the specification marks the endpoint as not requiring authentication.
 - **Endpoint discovery**: AuthZEN requires the request URL to be the endpoint the PDP advertises in its metadata, when
   the PEP uses the metadata (section 10.1). With `discoverEndpoints` set, the client reads the metadata at
   initialization and sends each operation to the advertised endpoint: through `GeneratedClient` when the endpoint is
   the default path under the PDP URL, and through an HTTP client on the endpoint URL otherwise. An operation whose
-  endpoint the PDP doesn't advertise fails without a call, as AuthZEN says the PDP doesn't support that API. The
+  endpoint the PDP doesn't advertise fails without a call, as AuthZEN says the PDP doesn't support that API. An
+  advertised endpoint must be an absolute `http` or `https` URL, and an `https` PDP must not advertise a plain `http`
+  endpoint, as the client sends its credentials to every endpoint. Initialization fails otherwise, naming the
+  metadata parameter. The
   client doesn't verify `signed_metadata`, which AuthZEN allows a PEP to ignore (section 9.1.3).
 - **Authentication**: The PDP may not authenticate its callers, or authenticate them in any way (section 11.2 names
   mutual TLS, OAuth and API keys). `auth` is optional and takes any `http:ClientAuthConfig` (Bearer token, Basic auth,
   self-signed JWT and the OAuth 2.0 grants) or an `ApiKeyConfig`, which sends a key in the `Authorization` header or a
   custom header. Mutual TLS is set with `secureSocket`.
-- **PDP URL**: `serviceUrl` is required, as it is the PDP identifier. A trailing slash is removed, and a URL that is
-  not `http` or `https`, or that has a query or fragment, is rejected (section 9.1.1).
+- **PDP URL**: `serviceUrl` is required, as it is the PDP identifier. A trailing slash is removed, the scheme is
+  lower-cased, and a URL that is not `http` or `https`, or that has a query or fragment, is rejected (section 9.1.1).
+  Plain `http` is accepted for development PDPs, although AuthZEN identifiers use `https`.
 - **One header type**: The generator creates a separate but identical header record for each operation. The wrapper
   takes a single `RequestHeaders` record in all of them. The generated per-operation header records are still public
   in `types.bal`, as the generated client's remote methods use them.

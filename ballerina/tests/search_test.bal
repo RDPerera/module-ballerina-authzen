@@ -56,3 +56,16 @@ isolated function testSearchActions() returns error? {
     });
     test:assertEquals(result.results, [canRead, canWrite]);
 }
+
+@test:Config {}
+isolated function testSearchPageWithoutNextToken() returns error? {
+    Client figure19 = check new (MOCK_URL + "/figure19");
+    ResourceSearchResponse result = check figure19->searchResources({
+        subject: alice,
+        action: canRead,
+        'resource: {'type: "account"}
+    });
+    test:assertEquals(result.results.map(r => r.id), ["123", "456"]);
+    test:assertEquals(result.page, {count: 2, total: 102});
+    test:assertEquals(result.page?.nextToken, ());
+}

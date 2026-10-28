@@ -261,6 +261,14 @@ service / on new http:Listener(MOCK_PORT) {
     resource function post pdp/tenant3/subjects(http:Request request) returns http:Response|error =>
         searchSubjects(request);
 
+    // PDP `http://localhost:9090/figure19`, which answers a resource search with the response of Figure 19 of
+    // AuthZEN: a `page` without `next_token`.
+    resource function post figure19/access/v1/search/'resource() returns json => {
+        page: {count: 2, total: 102},
+        context: {query_execution_time_ms: 42},
+        results: [{'type: "account", id: "123"}, {'type: "account", id: "456"}]
+    };
+
     // PDP `http://localhost:9090/mixup`, whose metadata names another PDP.
     resource function get \.well\-known/authzen\-configuration/mixup() returns json =>
         metadata("https://pdp.attacker.example");

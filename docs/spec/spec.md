@@ -58,7 +58,7 @@ The client is built from an OpenAPI description of the API (`docs/spec/openapi.y
 public isolated function init(string serviceUrl, *ConnectionConfig config) returns error?
 ```
 
-`serviceUrl` is the PDP URL, which is its `policy_decision_point` identifier, for example `https://pdp.example.com` or `https://pdp.example.com/tenant1`. A trailing slash is removed. Initialization fails when the URL is not an `http` or `https` URL, or when it has a query or a fragment (section 9.1.1).
+`serviceUrl` is the PDP URL, which is its `policy_decision_point` identifier, for example `https://pdp.example.com` or `https://pdp.example.com/tenant1`. A trailing slash is removed and the scheme is lower-cased. Initialization fails when the URL is not an `http` or `https` URL, or when it has a query or a fragment (section 9.1.1).
 
 `ConnectionConfig` holds the authentication configuration (`auth`), the endpoint discovery flag (`discoverEndpoints`) and the standard HTTP client settings (HTTP version, timeout, retries, circuit breaker, pooling, redirects, cookies, compression, caching, proxy, response limits, socket settings and `secureSocket`).
 
@@ -80,6 +80,8 @@ Mutual TLS is configured with `secureSocket`. Without `auth`, requests are sent 
 By default, each operation calls the default path of its API under the PDP URL.
 
 When `discoverEndpoints` is `true`, the client reads the PDP metadata during initialization (see [4.4](#44-getmetadata)) and sends each operation to the endpoint the PDP advertises for it (section 10.1). Initialization fails when the metadata can't be read or names another PDP. An operation whose endpoint the metadata doesn't advertise returns an error without calling the PDP, as AuthZEN states that the PDP doesn't support that API (section 9.1.1).
+
+Initialization also fails when an advertised endpoint is not an absolute `http` or `https` URL, or when the PDP URL is `https` and an advertised endpoint is plain `http`: the client sends its credentials to every endpoint, so it doesn't follow a downgrade to cleartext. The error names the metadata parameter.
 
 ## 3. Information model
 
@@ -115,7 +117,7 @@ remote isolated function evaluateBatch(BatchEvaluationRequest request, RequestHe
         returns BatchEvaluationResponse|error
 ```
 
-Evaluates several access requests in one call (section 7). The top-level `subject`, `action`, `resource` and `context` are defaults that each entry of `evaluations` may override. `options.evaluationsSemantic` selects `execute_all` (the default), `deny_on_first_deny` or `permit_on_first_permit`; other options are sent as given. The response holds one decision per evaluated entry, in request order. A request without entries (or with an empty `evaluations` array) is a single evaluation, answered with a top-level `decision`.
+Evaluates several access requests in one call (section 7). The top-level `subject`, `action`, `resource` and `context` are defaults that each entry of `evaluations` may override. `options.evaluationsSemantic` selects `execute_all` (the default), `deny_on_first_deny` or `permit_on_first_permit`; other options are sent as given. The response holds one decision per evaluated entry, in request order; with `deny_on_first_deny` and `permit_on_first_permit` the PDP stops early and returns fewer decisions than entries. A request without entries (or with an empty `evaluations` array) is a single evaluation, answered with a top-level `decision`.
 
 ### 4.3 searchSubjects, searchResources and searchActions
 
@@ -128,7 +130,7 @@ remote isolated function searchActions(ActionSearchRequest request, RequestHeade
         returns ActionSearchResponse|error
 ```
 
-Find the subjects of a type that may perform an action on a resource, the resources of a type a subject may perform an action on, and the actions a subject may perform on a resource (section 8). The searched entity carries its type only. When a response holds a `page` with a non-empty `nextToken`, more results are available: the next page is requested by sending the token as `page.token`, with every other member of the request unchanged (section 8.2).
+Find the subjects of a type that may perform an action on a resource, the resources of a type a subject may perform an action on, and the actions a subject may perform on a resource (section 8). The searched entity carries its type only. When a response holds a `page` with a non-empty `nextToken`, more results are available: the next page is requested by sending the token as `page.token`, with every other member of the request unchanged (section 8.2). An empty or absent `nextToken` means there are no more results; AuthZEN requires the member, but its own example response (Figure 19) omits it.
 
 ### 4.4 getMetadata
 
@@ -136,7 +138,7 @@ Find the subjects of a type that may perform an action on a resource, the resour
 remote isolated function getMetadata() returns Metadata|error
 ```
 
-Reads the PDP metadata (section 9). The URL is formed by inserting `/.well-known/authzen-configuration` between the host and the path of the PDP URL (section 9.2), so the metadata of `https://pdp.example.com/tenant1` is read from `https://pdp.example.com/.well-known/authzen-configuration/tenant1`. The operation returns an error when the `policy_decision_point` of the metadata is not the PDP URL of the client (section 9.2.3), ignoring a trailing slash on either side, which prevents PDP mix-up attacks.
+Reads the PDP metadata (section 9). The URL is formed by inserting `/.well-known/authzen-configuration` between the host and the path of the PDP URL (section 9.2), so the metadata of `https://pdp.example.com/tenant1` is read from `https://pdp.example.com/.well-known/authzen-configuration/tenant1`. The operation returns an error when the `policy_decision_point` of the metadata is not the PDP URL of the client (section 9.2.3), ignoring a trailing slash on either side, which prevents PDP mix-up attacks. The request carries the configured credentials, as some PDPs protect their metadata.
 
 ### 4.5 Request identification
 
@@ -153,7 +155,9 @@ Operations return an error when the PDP can't evaluate the request or can't be r
 
 ## 6. Conformance and known limitations
 
-* `signed_metadata` is returned in `Metadata.signedMetadata` but not verified, which AuthZEN allows a PEP to do (section 9.1.3).
+* `signed_metadata` is returned in `Metadata.signedMetadata` but not verified, which AuthZEN allows a PEP to do (section 9.1.3). Its values must not be trusted over the plain values without verifying it.
+* The `policy_decision_point` comparison (section 9.2.3) ignores a trailing slash and the case of the scheme on either side, where AuthZEN requires the values to be identical.
+* Plain `http` PDP URLs are accepted, for development PDPs, although AuthZEN identifiers use `https` (section 9.1.1). Over `http`, the metadata and the requests can be read and changed in transit.
 * The library doesn't check that the PDP returns the `X-Request-ID` it was sent.
 * Request records are not validated before they are sent; the PDP returns `400` for a malformed request (section 10.1.1).
 * Only the HTTPS JSON binding is implemented. Other transport bindings, such as gRPC, are not.

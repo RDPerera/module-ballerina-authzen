@@ -143,3 +143,35 @@ isolated function testDiscoverCustomSubjectSearchEndpoint() returns error? {
     }, {requestId: "req-3"});
     test:assertEquals(subjects.results, [alice]);
 }
+
+@test:Config {}
+isolated function testCredentialsReachDiscoveredEndpoint() returns error? {
+    Client tenantPdp = check new (MOCK_URL + "/tenant1", auth = {token: "discovered-token"}, discoverEndpoints = true);
+    Decision decision = check tenantPdp->evaluate({subject: alice, action: canRead, 'resource: {'type: "document", id: "doc-1"}});
+    test:assertEquals(decision.context, {"authorization": "Bearer discovered-token"});
+}
+
+@test:Config {}
+isolated function testHttpsPdpRejectsPlainHttpEndpoint() returns error? {
+    GeneratedClient defaultClient = check new ({}, "https://pdp.example.com");
+    ApiClient|error apiClient = toApiClient("http://pdp.example.com/eval", "access_evaluation_endpoint",
+            EVALUATION_PATH, "https://pdp.example.com", defaultClient, {});
+    if apiClient !is error {
+        test:assertFail("Expected an error for a plain http endpoint of an https PDP");
+    }
+    test:assertTrue(apiClient.message().includes("'access_evaluation_endpoint'"));
+    ApiClient|error mixedCase = toApiClient("HTTPS://pdp.example.com/eval", "access_evaluation_endpoint",
+            EVALUATION_PATH, "https://pdp.example.com", defaultClient, {});
+    test:assertTrue(mixedCase is http:Client);
+}
+
+@test:Config {}
+isolated function testInvalidAdvertisedEndpoint() returns error? {
+    GeneratedClient defaultClient = check new ({}, "http://pdp.example.com");
+    ApiClient|error apiClient = toApiClient("/search/action", "search_action_endpoint", SEARCH_ACTION_PATH,
+            "http://pdp.example.com", defaultClient, {});
+    if apiClient !is error {
+        test:assertFail("Expected an error for a relative endpoint URL");
+    }
+    test:assertEquals(apiClient.message(), "The PDP metadata advertises an invalid 'search_action_endpoint': '/search/action'");
+}
