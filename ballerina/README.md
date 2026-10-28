@@ -2,7 +2,7 @@
 
 [AuthZEN](https://openid.net/wg/authzen/) is the OpenID Foundation standard for asking a Policy Decision Point (PDP) for authorization decisions. The [Authorization API 1.0](https://openid.net/specs/authorization-api-1_0.html) defines how a Policy Enforcement Point (PEP) asks a PDP whether a subject may perform an action on a resource, without depending on how the PDP stores or evaluates its policies. Many authorization products implement it, including Cerbos, Topaz, Open Policy Agent, OpenFGA, Axiomatics, PingAuthorize, SGNL and WSO2 Identity Server.
 
-The `ballerina/authzen` package lets a Ballerina integration act as a PEP against any AuthZEN 1.0 PDP.
+The WSO2 AuthZEN Connector lets your integration act as a PEP against any AuthZEN 1.0 PDP.
 
 ### Key features
 
