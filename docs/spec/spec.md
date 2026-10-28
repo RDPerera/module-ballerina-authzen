@@ -95,6 +95,7 @@ The records follow the AuthZEN information model (section 5). JSON members are s
 | `Context` | an open record of environment attributes |
 | `Decision` | `decision`, `context?` |
 | `SubjectFilter`, `ResourceFilter` | `'type`, `id?`, `properties?` (the entity to search for) |
+| `BatchEvaluationOptions` | `evaluationsSemantic?` (see [4.2](#42-evaluatebatch)), and any other option the PDP defines |
 | `PageRequest` | `token?`, `'limit?` (non-negative), `properties?` |
 | `PageResponse` | `nextToken`, `count?`, `total?`, `properties?` |
 
@@ -117,7 +118,29 @@ remote isolated function evaluateBatch(BatchEvaluationRequest request, RequestHe
         returns BatchEvaluationResponse|error
 ```
 
-Evaluates several access requests in one call (section 7). The top-level `subject`, `action`, `resource` and `context` are defaults that each entry of `evaluations` may override. `options.evaluationsSemantic` selects `execute_all` (the default), `deny_on_first_deny` or `permit_on_first_permit`; other options are sent as given. The response holds one decision per evaluated entry, in request order; with `deny_on_first_deny` and `permit_on_first_permit` the PDP stops early and returns fewer decisions than entries. A request without entries (or with an empty `evaluations` array) is a single evaluation, answered with a top-level `decision`.
+Evaluates several access requests in one call (section 7). The top-level `subject`, `action`, `resource` and `context` are defaults that each entry of `evaluations` may override.
+
+`options` is a `BatchEvaluationOptions` record, sent as the `options` member. Its `evaluationsSemantic` field (the `evaluations_semantic` member, section 7.1.2.1) selects how the PDP runs the entries:
+
+| `evaluationsSemantic` | Behaviour |
+|---|---|
+| `"execute_all"` (the default when the field is absent) | The PDP evaluates every entry and returns a decision for each, in request order. A failed entry is a decision of `false`, which may carry the reason in its `context`. |
+| `"deny_on_first_deny"` | The PDP evaluates the entries in order and stops at the first deny or failure, like `&&`. The response ends with that decision. |
+| `"permit_on_first_permit"` | The PDP evaluates the entries in order and stops at the first permit, like `\|\|`. The response ends with that decision. |
+
+The field is typed as a union of the three strings, so other values are rejected at compile time. Other members of `options` are sent as given, for options a PDP defines.
+
+```ballerina
+authzen:BatchEvaluationResponse response = check pdp->evaluateBatch({
+    subject: {'type: "user", id: "alice@example.com"},
+    action: {name: "can_read"},
+    evaluations: [
+        {'resource: {'type: "document", id: "1"}},
+        {'resource: {'type: "document", id: "2"}}
+    ],
+    options: {evaluationsSemantic: "deny_on_first_deny"}
+});
+``` The response holds one decision per evaluated entry, in request order; with `deny_on_first_deny` and `permit_on_first_permit` the PDP stops early and returns fewer decisions than entries. A request without entries (or with an empty `evaluations` array) is a single evaluation, answered with a top-level `decision`.
 
 ### 4.3 searchSubjects, searchResources and searchActions
 
