@@ -1,53 +1,24 @@
-# Examples
+# Ballerina AuthZEN Examples
 
-The `ballerina/authzen` package provides practical examples illustrating usage in various scenarios.
+This directory contains a set of examples to demonstrate how to use the `ballerina/authzen` library.
 
-| Example | Description |
-|---------|-------------|
-| [`todo-access-check`](./todo-access-check) | Checks whether a user may perform an action with `evaluate`, then checks every user and action of a todo app in one `evaluateBatch` call |
-| [`access-review`](./access-review) | Lists who may delete a record, the records a user may delete (page by page) and the actions a user may perform on a record, with the Search APIs |
+## Examples
 
-## Prerequisites
+- [**Check access in a todo app**](<todo-access-check/A sample todo access check using Ballerina AuthZEN.md>): check one access request with `evaluate`, then every user and action in one `evaluateBatch` call.
+- [**Review who can access records**](<access-review/A sample access review using Ballerina AuthZEN.md>): find who may delete a record, which records a user may delete (page by page) and what a user may do on a record, with the Search APIs.
 
-1. Both examples run against a public PDP of the [AuthZEN interoperability tests](https://authzen-interop.net), so they need no credentials. To use another PDP, set `pdpUrl` in a `Config.toml` in the example directory.
+## Running the Examples
 
-2. Build and push the package to your local Ballerina repository:
+Each example is a self-contained Ballerina package. From inside an example's directory:
 
-    ```bash
-    cd ../ballerina
-    bal pack && bal push --repository=local
-    ```
+```shell
+$ bal run
+```
 
-## Running an example
+The examples are also built as part of the repository build (`./gradlew build` from the repository root), against the `ballerina/authzen` package from the same checkout. Until `ballerina/authzen` is published to Ballerina Central, run an example the same way, with the distribution that build unpacks:
 
-Execute the following commands to build an example from the source:
+```shell
+$ ../../target/ballerina-runtime/bin/bal run
+```
 
-* To build an example:
-
-    ```bash
-    bal build
-    ```
-
-* To run an example:
-
-    ```bash
-    bal run
-    ```
-
-## Building the examples with the local module
-
-**Warning**: Due to the absence of support for reading local repositories for single Ballerina files, the Bala of the module is manually written to the central repository as a workaround. Consequently, the bash script may modify your local Ballerina repositories.
-
-Execute the following commands to build all the examples against the changes you have made to the module locally:
-
-* To build all the examples:
-
-    ```bash
-    ./build.sh build
-    ```
-
-* To run all the examples:
-
-    ```bash
-    ./build.sh run
-    ```
+Both examples run against a public PDP of the [AuthZEN interoperability tests](https://authzen-interop.net), which needs no credentials. To use another PDP, set `pdpUrl` in a `Config.toml` in the example directory.

@@ -1,1 +1,1 @@
-../Access review.md
+../A sample access review using Ballerina AuthZEN.md

@@ -1,1 +1,1 @@
-../Todo access check.md
+../A sample todo access check using Ballerina AuthZEN.md
