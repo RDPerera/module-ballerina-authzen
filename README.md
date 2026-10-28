@@ -1,10 +1,10 @@
-# Ballerina AuthZEN library
+# Ballerina AuthZEN Library
 
-[![Build](https://github.com/ballerina-platform/module-ballerina-authzen/actions/workflows/ci.yml/badge.svg)](https://github.com/ballerina-platform/module-ballerina-authzen/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/ballerina-platform/module-ballerina-authzen/branch/main/graph/badge.svg)](https://codecov.io/gh/ballerina-platform/module-ballerina-authzen)
-[![Security Scan](https://github.com/ballerina-platform/module-ballerina-authzen/actions/workflows/security-scan.yml/badge.svg)](https://github.com/ballerina-platform/module-ballerina-authzen/actions/workflows/security-scan.yml)
-[![GitHub Last Commit](https://img.shields.io/github/last-commit/ballerina-platform/module-ballerina-authzen.svg)](https://github.com/ballerina-platform/module-ballerina-authzen/commits/main)
-[![GitHub Issues](https://img.shields.io/github/issues/ballerina-platform/ballerina-library/module/authzen.svg?label=Open%20Issues)](https://github.com/ballerina-platform/ballerina-library/labels/module%2Fauthzen)
+  [![Build](https://github.com/ballerina-platform/module-ballerina-authzen/actions/workflows/build-timestamped-master.yml/badge.svg)](https://github.com/ballerina-platform/module-ballerina-authzen/actions/workflows/build-timestamped-master.yml)
+  [![codecov](https://codecov.io/gh/ballerina-platform/module-ballerina-authzen/branch/main/graph/badge.svg)](https://codecov.io/gh/ballerina-platform/module-ballerina-authzen)
+  [![Trivy](https://github.com/ballerina-platform/module-ballerina-authzen/actions/workflows/trivy-scan.yml/badge.svg)](https://github.com/ballerina-platform/module-ballerina-authzen/actions/workflows/trivy-scan.yml)
+  [![GitHub Last Commit](https://img.shields.io/github/last-commit/ballerina-platform/module-ballerina-authzen.svg?label=Last%20Commit)](https://github.com/ballerina-platform/module-ballerina-authzen/commits/main)
+  [![GitHub issues](https://img.shields.io/github/issues/ballerina-platform/ballerina-standard-library/module/authzen.svg?label=Open%20Issues)](https://github.com/ballerina-platform/ballerina-standard-library/labels/module%2Fauthzen)
 
 ## Overview
 
@@ -101,95 +101,84 @@ The `authzen` package provides practical examples illustrating usage in various 
 1. [Todo access check](https://github.com/ballerina-platform/module-ballerina-authzen/tree/main/examples/todo-access-check) - Checks whether a user may perform an action, then checks every user and action of a todo app in one batch call.
 
 2. [Access review](https://github.com/ballerina-platform/module-ballerina-authzen/tree/main/examples/access-review) - Lists who can delete a record, which records a user can delete (page by page), and what a user can do on a record.
-## Build from the source
+## Documentation
 
-### Setting up the prerequisites
+- Package overview, setup and quickstart: [`ballerina/README.md`](ballerina/README.md)
+- Library specification (the `Client`, authentication, endpoint discovery, the operations and the error model): [`docs/spec/spec.md`](docs/spec/spec.md)
+- OpenAPI specification of the API and the changes made to it: [`docs/spec/openapi.yaml`](docs/spec/openapi.yaml), [`docs/spec/sanitations.md`](docs/spec/sanitations.md)
+- Runnable examples, each a self-contained package: [`examples/`](examples/)
 
-1. Download and install Java SE Development Kit (JDK) version 21. You can download it from either of the following sources:
+## Building from the source
 
-    * [Oracle JDK](https://www.oracle.com/java/technologies/downloads/)
-    * [OpenJDK](https://adoptium.net/)
+### Set up the prerequisites
 
-   > **Note:** After installation, remember to set the `JAVA_HOME` environment variable to the directory where JDK was installed.
+1. [OpenJDK 21](https://adoptium.net/) or later.
+2. Export your GitHub personal access token with the read package permissions as follows.
 
-2. Download and install [Ballerina Swan Lake](https://ballerina.io/).
+   ```
+   export packageUser=<Username>
+   export packagePAT=<Personal access token>
+   ```
 
-3. Download and install [Docker](https://www.docker.com/get-started).
-
-   > **Note**: Ensure that the Docker daemon is running before executing any tests.
-
-4. Export Github Personal access token with read package permissions as follows,
-
-    ```bash
-    export packageUser=<Username>
-    export packagePAT=<Personal access token>
-    ```
-
-### Build options
+### Build the source
 
 Execute the commands below to build from the source.
 
-1. To build the package:
+- To build the package:
 
-   ```bash
+   ```
    ./gradlew clean build
    ```
 
-2. To run the tests:
+- To run the tests:
 
-   ```bash
+   ```
    ./gradlew clean test
    ```
 
-3. To build the without the tests:
+- To build without the tests:
 
-   ```bash
+   ```
    ./gradlew clean build -x test
    ```
 
-4. To run tests against different environments:
+- To debug the package with a remote debugger:
 
-   ```bash
-   ./gradlew clean test -Pgroups=<Comma separated groups/test cases>
    ```
-
-5. To debug the package with a remote debugger:
-
-   ```bash
    ./gradlew clean build -Pdebug=<port>
    ```
 
-6. To debug with the Ballerina language:
+- To debug with Ballerina language:
 
-   ```bash
+   ```
    ./gradlew clean build -PbalJavaDebug=<port>
    ```
 
-7. Publish the generated artifacts to the local Ballerina Central repository:
+- Publish the generated artifacts to the local Ballerina central repository:
 
-    ```bash
-    ./gradlew clean build -PpublishToLocalCentral=true
-    ```
+   ```
+   ./gradlew clean build -PpublishToLocalCentral=true
+   ```
 
-8. Publish the generated artifacts to the Ballerina Central repository:
+- Publish the generated artifacts to the Ballerina central repository:
 
-   ```bash
+   ```
    ./gradlew clean build -PpublishToCentral=true
    ```
 
-## Contribute to Ballerina
+## Contributing to Ballerina
 
-As an open-source project, Ballerina welcomes contributions from the community.
+As an open source project, Ballerina welcomes contributions from the community.
 
 For more information, go to the [contribution guidelines](https://github.com/ballerina-platform/ballerina-lang/blob/master/CONTRIBUTING.md).
 
 ## Code of conduct
 
-All the contributors are encouraged to read the [Ballerina Code of Conduct](https://ballerina.io/code-of-conduct).
+All contributors are encouraged to read the [Ballerina Code of Conduct](https://ballerina.io/code-of-conduct).
 
 ## Useful links
 
-* For more information go to the [`authzen` package](https://central.ballerina.io/ballerina/authzen/latest).
-* For example demonstrations of the usage, go to [Ballerina By Examples](https://ballerina.io/learn/by-example/).
-* Chat live with us via our [Discord server](https://discord.gg/ballerinalang).
-* Post all technical questions on Stack Overflow with the [#ballerina](https://stackoverflow.com/questions/tagged/ballerina) tag.
+- For more information go to the [`authzen` library](https://lib.ballerina.io/ballerina/authzen/latest).
+- For example demonstrations of the usage, go to [Ballerina By Examples](https://ballerina.io/learn/by-example/).
+- Chat live with us via our [Discord server](https://discord.gg/ballerinalang).
+- Post all technical questions on Stack Overflow with the [#ballerina](https://stackoverflow.com/questions/tagged/ballerina) tag.
