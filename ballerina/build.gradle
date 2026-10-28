@@ -17,13 +17,6 @@
  */
 
 import org.apache.tools.ant.taskdefs.condition.Os
-import org.gradle.process.ExecOperations
-
-import javax.inject.Inject
-
-abstract class BallerinaExecHelper {
-    @Inject abstract ExecOperations getExecOperations()
-}
 
 plugins {
     id 'io.ballerina.plugin'
@@ -83,17 +76,12 @@ tasks.register('updateTomlFiles') {
 
 // Used by the release pipeline to commit the version-stamped toml files. Outside the release pipeline there is
 // usually nothing to commit, so a failing `git commit` is expected and must not fail the build.
-tasks.register('commitTomlFiles') {
-    def execHelper = project.objects.newInstance(BallerinaExecHelper)
-    doLast {
-        execHelper.execOperations.exec {
-            ignoreExitValue = true
-            if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-                commandLine 'cmd', '/c', "git commit -m \"[Automated] Update the toml files\" Ballerina.toml Dependencies.toml"
-            } else {
-                commandLine 'sh', '-c', "git commit -m '[Automated] Update the toml files' Ballerina.toml Dependencies.toml"
-            }
-        }
+tasks.register('commitTomlFiles', Exec) {
+    ignoreExitValue = true
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        commandLine 'cmd', '/c', "git commit -m \"[Automated] Update the toml files\" Ballerina.toml Dependencies.toml"
+    } else {
+        commandLine 'sh', '-c', "git commit -m '[Automated] Update the toml files' Ballerina.toml Dependencies.toml"
     }
 }
 

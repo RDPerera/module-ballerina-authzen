@@ -77,14 +77,3 @@ if (tasks.names.contains('build')) {
         dependsOn(rootBuildDeps)
     }
 }
-
-def rootCleanDeps = [":authzen-ballerina:clean", ":authzen-examples:clean"]
-if (tasks.names.contains('clean')) {
-    tasks.named('clean') {
-        dependsOn(rootCleanDeps)
-    }
-} else {
-    tasks.register('clean') {
-        dependsOn(rootCleanDeps)
-    }
-}
