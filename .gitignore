@@ -53,3 +53,6 @@ build
 
 # Ignore Docker env file
 docker.env
+
+# Auto generated Dependencies.toml files
+examples/**/Dependencies.toml

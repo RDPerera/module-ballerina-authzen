@@ -17,8 +17,10 @@
  */
 
 plugins {
-    id 'net.researchgate.release'
+    id "net.researchgate.release"
 }
+
+description = 'Ballerina - AuthZEN'
 
 allprojects {
     group = project.group
@@ -28,18 +30,13 @@ allprojects {
 
     repositories {
         mavenLocal()
+        mavenCentral()
         maven {
             url = 'https://maven.wso2.org/nexus/content/repositories/releases/'
         }
-
         maven {
             url = 'https://maven.wso2.org/nexus/content/groups/wso2-public/'
         }
-
-        maven {
-            url = 'https://repo.maven.apache.org/maven2'
-        }
-
         maven {
             url = 'https://maven.pkg.github.com/ballerina-platform/*'
             credentials {
@@ -57,17 +54,37 @@ allprojects {
 
 def moduleVersion = project.version.replace("-SNAPSHOT", "")
 
-tasks.named('build') {
-    dependsOn(':authzen-ballerina:build')
-}
-
 release {
     buildTasks = ['build']
     failOnSnapshotDependencies = true
     versionPropertyFile = 'gradle.properties'
     tagTemplate = 'v${version}'
+
     git {
         requireBranch = "release-${moduleVersion}"
         pushToRemote = 'origin'
+    }
+}
+
+// The release plugin registers a root `build` task of its own, so configure it when it already exists.
+def rootBuildDeps = [":authzen-ballerina:build", ":authzen-examples:build"]
+if (tasks.names.contains('build')) {
+    tasks.named('build') {
+        dependsOn(rootBuildDeps)
+    }
+} else {
+    tasks.register('build') {
+        dependsOn(rootBuildDeps)
+    }
+}
+
+def rootCleanDeps = [":authzen-ballerina:clean", ":authzen-examples:clean"]
+if (tasks.names.contains('clean')) {
+    tasks.named('clean') {
+        dependsOn(rootCleanDeps)
+    }
+} else {
+    tasks.register('clean') {
+        dependsOn(rootCleanDeps)
     }
 }

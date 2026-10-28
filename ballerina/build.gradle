@@ -29,7 +29,7 @@ plugins {
     id 'io.ballerina.plugin'
 }
 
-description = 'AuthZEN - Ballerina'
+description = 'Ballerina - AuthZEN Ballerina Library'
 
 def packageName = "authzen"
 def packageOrg = "ballerina"
@@ -51,15 +51,29 @@ def stripBallerinaExtensionVersion(String extVersion) {
     }
 }
 
+// `langVersion` makes the plugin unpack the matching jballerina-tools distribution into target/ballerina-runtime
+// and build with it, as other stdlib modules do, rather than its Docker mode. The examples build with the same
+// distribution.
 ballerina {
     packageOrganization = packageOrg
     module = packageName
-    testCoverageParam = "--code-coverage --coverage-format=xml"
-    connector = true
-    platform = "any"
+    langVersion = ballerinaLangVersion
 }
 
-task updateTomlFiles {
+configurations {
+    externalJars
+    ballerinaStdLibs
+}
+
+dependencies {
+    // The plugin adds this dependency at apply time, before the `ballerina {}` block sets langVersion, so its copy
+    // reads `jballerina-tools:null`; this declaration is the one that resolves.
+    jbalTools("org.ballerinalang:jballerina-tools:${ballerinaLangVersion}") {
+        transitive = false
+    }
+}
+
+tasks.register('updateTomlFiles') {
     doLast {
         def newBallerinaToml = ballerinaTomlFilePlaceHolder.text.replace("@project.version@", project.version)
         newBallerinaToml = newBallerinaToml.replace("@toml.version@", tomlVersion)
@@ -67,11 +81,13 @@ task updateTomlFiles {
     }
 }
 
-task commitTomlFiles {
+// Used by the release pipeline to commit the version-stamped toml files. Outside the release pipeline there is
+// usually nothing to commit, so a failing `git commit` is expected and must not fail the build.
+tasks.register('commitTomlFiles') {
     def execHelper = project.objects.newInstance(BallerinaExecHelper)
     doLast {
         execHelper.execOperations.exec {
-            ignoreExitValue true
+            ignoreExitValue = true
             if (Os.isFamily(Os.FAMILY_WINDOWS)) {
                 commandLine 'cmd', '/c', "git commit -m \"[Automated] Update the toml files\" Ballerina.toml Dependencies.toml"
             } else {
@@ -87,6 +103,7 @@ publishing {
             artifact source: createArtifactZip, extension: 'zip'
         }
     }
+
     repositories {
         maven {
             name = "GitHubPackages"
@@ -99,10 +116,33 @@ publishing {
     }
 }
 
-clean {
-    delete 'build'
-}
+// copyStdlibs -> unpackStdLibs -> unpackJballerinaTools unpacks the distribution into target/ballerina-runtime;
+// without this edge nothing triggers it.
+updateTomlFiles.dependsOn copyStdlibs
 
 build.dependsOn "generatePomFileForMavenPublication"
 publishToMavenLocal.dependsOn build
 publish.dependsOn build
+
+// `bal test` with coverage can exit 0 when tests fail, so gate on the report the test run writes. Skipped for
+// GraalVM runs (-PbalGraalVMTest), which write no report.
+test {
+    def resultsFile = file("${project.projectDir}/target/report/test_results.json")
+    def graalvmRun = project.hasProperty('balGraalVMTest')
+    doFirst {
+        delete resultsFile
+    }
+    doLast {
+        if (graalvmRun) {
+            return
+        }
+        if (!resultsFile.exists()) {
+            throw new GradleException("bal test produced no target/report/test_results.json")
+        }
+        def results = new groovy.json.JsonSlurper().parse(resultsFile)
+        if ((results.failed ?: 0) > 0 || (results.skipped ?: 0) > 0 || (results.totalTests ?: 0) == 0) {
+            throw new GradleException("bal test: ${results.failed} failing / ${results.skipped} skipped / " +
+                    "${results.passed} passing of ${results.totalTests}")
+        }
+    }
+}
