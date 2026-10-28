@@ -1,0 +1,18 @@
+[package]
+org = "ballerina"
+name = "authzen"
+version = "1.0.0"
+authors = ["Ballerina"]
+keywords = ["authzen", "authorization", "access control", "PEP", "PDP", "Type/Connector", "Area/Built-in", "Area/Security & Identity", "Name/AuthZEN"]
+repository = "https://github.com/ballerina-platform/module-ballerina-authzen"
+icon = "icon.png"
+license = ["Apache-2.0"]
+# Must stay in lockstep with `ballerinaLangVersion` in gradle.properties: the io.ballerina.plugin harness builds and
+# tests the package with exactly that distribution.
+distribution = "2201.12.0"
+
+[build-options]
+observabilityIncluded = false
+
+[platform.java21]
+graalvmCompatible = true

@@ -1,0 +1,11 @@
+# ballerina:14 is a false positive for this package. It matches identifier names containing words such as
+# "auth" or "key", not secret values. Flagged code is:
+#  - the `httpAuth` local variable in `Client.init`, initialized to nil (no credential), and the `apiKeyHeader`
+#    map, initialized empty and filled from the caller-supplied `ApiKeyConfig`,
+#  - the `auth` local variable in `Client.init` and `httpConfig.auth = auth` in `toHttpConfig`, which forward the
+#    caller-supplied `auth` configuration to the HTTP client.
+# No credential is embedded in the source; the package receives its credentials from the caller.
+# TODO: replace this rule exclusion with a targeted scan suppression (with a reason) once `bal scan` supports it
+# (planned for v0.13.0).
+[rule]
+exclude = ["ballerina:14"]
