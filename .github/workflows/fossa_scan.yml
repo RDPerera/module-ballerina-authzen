@@ -7,10 +7,10 @@ jobs:
   fossa-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v3
       - uses: fossas/fossa-action@main
         env:
           packageUser: ${{ secrets.BALLERINA_BOT_USERNAME }}
-          packagePAT: ${{ secrets.BALLERINA_BOT_TOKEN }}
+          packagePAT: ${{ secrets.BALLERINA_BOT_TOKEN }}       
         with:
           api-key: ${{secrets.FOSSA_APIKEY}}
