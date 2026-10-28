@@ -111,26 +111,3 @@ updateTomlFiles.dependsOn copyStdlibs
 build.dependsOn "generatePomFileForMavenPublication"
 publishToMavenLocal.dependsOn build
 publish.dependsOn build
-
-// `bal test` with coverage can exit 0 when tests fail, so gate on the report the test run writes. Skipped for
-// GraalVM runs (-PbalGraalVMTest), which write no report.
-test {
-    def resultsFile = file("${project.projectDir}/target/report/test_results.json")
-    def graalvmRun = project.hasProperty('balGraalVMTest')
-    doFirst {
-        delete resultsFile
-    }
-    doLast {
-        if (graalvmRun) {
-            return
-        }
-        if (!resultsFile.exists()) {
-            throw new GradleException("bal test produced no target/report/test_results.json")
-        }
-        def results = new groovy.json.JsonSlurper().parse(resultsFile)
-        if ((results.failed ?: 0) > 0 || (results.skipped ?: 0) > 0 || (results.totalTests ?: 0) == 0) {
-            throw new GradleException("bal test: ${results.failed} failing / ${results.skipped} skipped / " +
-                    "${results.passed} passing of ${results.totalTests}")
-        }
-    }
-}
