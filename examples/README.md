@@ -15,10 +15,6 @@ Each example is a self-contained Ballerina package. From inside an example's dir
 $ bal run
 ```
 
-The examples are also built as part of the repository build (`./gradlew build` from the repository root), against the `ballerina/authzen` package from the same checkout. Until `ballerina/authzen` is published to Ballerina Central, run an example the same way, with the distribution that build unpacks:
-
-```shell
-$ ../../target/ballerina-runtime/bin/bal run
-```
+The examples are also built as part of the repository build (`./gradlew build` from the repository root), against the `ballerina/authzen` package from the same checkout.
 
 Both examples run against a public PDP of the [AuthZEN interoperability tests](https://authzen-interop.net), which needs no credentials. To use another PDP, set `pdpUrl` in a `Config.toml` in the example directory.

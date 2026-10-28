@@ -24,10 +24,4 @@ pdpUrl = "https://<your-pdp>"
 $ bal run
 ```
 
-Until `ballerina/authzen` is published to Ballerina Central, run the example with the distribution that the repository build (`./gradlew build`) unpacks:
-
-```shell
-$ ../../target/ballerina-runtime/bin/bal run
-```
-
 The example prints the users who may delete record 102, the records bob may delete, and the actions bob may perform on record 102.

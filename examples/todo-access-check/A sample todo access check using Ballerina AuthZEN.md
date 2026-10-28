@@ -24,10 +24,4 @@ pdpUrl = "https://<your-pdp>"
 $ bal run
 ```
 
-Until `ballerina/authzen` is published to Ballerina Central, run the example with the distribution that the repository build (`./gradlew build`) unpacks:
-
-```shell
-$ ../../target/ballerina-runtime/bin/bal run
-```
-
 The example prints whether Beth may create a todo, then a permit or deny line for each user and action. Viewers may read todos but not create them.
