@@ -3,7 +3,13 @@ This file contains all the notable changes done to the Ballerina AuthZEN package
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - Unreleased
+## [1.0.1] - Unreleased
+
+### Fixed
+
+- Shortened the first paragraph of the package README, so Ballerina Central shows the package summary.
+
+## [1.0.0] - 2026-10-29
 
 ### Added
 
